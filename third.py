@@ -8,14 +8,11 @@ import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
 
-# Load the training and testing datasets
 train_data = pd.read_csv('./Q1_data/Q1_train.csv')
 test_data = pd.read_csv('./Q1_data/Q1_test.csv')
 
-# Remove unnecessary column from test data
 test_data = test_data.drop(columns=['Unnamed: 0'])
 
-# Define preprocessor excluding 'uenomax'
 numeric_features = train_data.drop(columns=['uenomax']).select_dtypes(include=['int64', 'float64']).columns
 numeric_transformer = Pipeline(steps=[
     ('imputer', SimpleImputer(strategy='median')),
@@ -29,13 +26,10 @@ preprocessor = ColumnTransformer(
         ('num', numeric_transformer, numeric_features),
         ('cat', categorical_transformer, categorical_features)])
 
-# Fit and transform the training data
 train_data_preprocessed = preprocessor.fit_transform(train_data.drop(columns=['uenomax']))
 
-# Transform the testing data
 test_data_preprocessed = preprocessor.transform(test_data)
 
-# Split the transformed training data into training and validation sets
 X_train, X_val, y_train, y_val = train_test_split(train_data_preprocessed, train_data['uenomax'], test_size=0.2, random_state=42)
 
 train_features = torch.tensor(X_train).float()
@@ -92,17 +86,14 @@ for epoch in range(500):
 fcn_mae = validation_loss(fcn_model, val_loader)
 fcn_mae
 
-# Predict on the test set
 test_features = torch.tensor(test_data_preprocessed).float()
 fcn_model.eval()
 with torch.no_grad():
     uenomax_pred = fcn_model(test_features).squeeze().numpy()
 
-# Prepare the submission dataframe
 submission = test_data[['datetime', 'ru_id']].copy()
 submission['uenomax'] = uenomax_pred
 
-# Pivot the submission dataframe
 submission_pivot = submission.pivot(index='datetime', columns='ru_id', values='uenomax').reset_index()
 
 def submitResult(pred):
