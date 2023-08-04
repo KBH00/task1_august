@@ -48,14 +48,12 @@ class MyModel:
                 x = x_test.reset_index()
                 predictions = [0] * len(x)
 
-            # Use a temporary DataFrame to store the predictions for this base station
             temp_pred = pd.DataFrame({
                 'datetime': x['datetime'],
                 'ru_id': base_station,
                 'uenomax': predictions
             })
 
-            # Only append predictions for datetimes that are not already in y_pred
             y_pred = y_pred.append(temp_pred[~temp_pred['datetime'].isin(y_pred['datetime'])], ignore_index=True)
 
         return y_pred
